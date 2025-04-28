@@ -61,6 +61,7 @@ public class ConverterClass implements Converter, ClassFileTransformer {
 
     /**
      * Create a class converter with the specified spec profile.
+     *
      * @param profile the specification profile to use for conversion
      */
     public ConverterClass(EESpecProfile profile) {
@@ -87,7 +88,6 @@ public class ConverterClass implements Converter, ClassFileTransformer {
         return convertInternal(path, src, dest, profile, null);
     }
 
-
     @Override
     public byte[] transform(ClassLoader loader, String className,
             Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
@@ -102,9 +102,9 @@ public class ConverterClass implements Converter, ClassFileTransformer {
         return outputStream.toByteArray();
     }
 
-
     /**
      * Convert specified class bytecode.
+     *
      * @param path the path
      * @param src the source byte stream
      * @param dest the output byte stream
@@ -152,7 +152,7 @@ public class ConverterClass implements Converter, ClassFileTransformer {
                                     if (logger.isLoggable(Level.FINE)) {
                                         logger.log(Level.FINE, sm.getString("classConverter.skipName",
                                                 profile.getSource(),
-                                                current.substring(pos).replace('/','.')));
+                                                current.substring(pos).replace('/', '.')));
                                     }
                                     // Cancel the replacement as the replacement does not exist
                                     String originalFragment;

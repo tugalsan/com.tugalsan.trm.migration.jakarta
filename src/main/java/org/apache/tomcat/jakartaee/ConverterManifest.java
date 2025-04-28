@@ -80,7 +80,6 @@ public class ConverterManifest implements Converter {
         return converted;
     }
 
-
     private void removeSignatures(Manifest manifest) {
         manifest.getMainAttributes().remove(Attributes.Name.SIGNATURE_VERSION);
         List<String> signatureEntries = new ArrayList<>();
@@ -98,7 +97,6 @@ public class ConverterManifest implements Converter {
         }
     }
 
-
     private boolean isCryptoSignatureEntry(Attributes attributes) {
         for (Object attributeKey : attributes.keySet()) {
             if (attributeKey.toString().endsWith("-Digest")) {
@@ -108,7 +106,6 @@ public class ConverterManifest implements Converter {
         return false;
     }
 
-
     private boolean updateValues(Manifest manifest, EESpecProfile profile) {
         boolean converted = updateValues(manifest.getMainAttributes(), profile);
         for (Attributes attributes : manifest.getEntries().values()) {
@@ -116,7 +113,6 @@ public class ConverterManifest implements Converter {
         }
         return converted;
     }
-
 
     private boolean updateValues(Attributes attributes, EESpecProfile profile) {
         boolean converted = false;
@@ -128,7 +124,7 @@ public class ConverterManifest implements Converter {
             // Purposefully avoid setting result
         }
         // Update package names in values
-        for (Entry<Object,Object> entry : attributes.entrySet()) {
+        for (Entry<Object, Object> entry : attributes.entrySet()) {
             String newValue = profile.convert((String) entry.getValue());
             newValue = replaceVersion(newValue);
             // Object comparison is deliberate

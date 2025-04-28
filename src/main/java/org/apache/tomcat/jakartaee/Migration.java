@@ -167,6 +167,7 @@ public class Migration {
 
     /**
      * Enable the default exclusion list for the tool.
+     *
      * @param enableDefaultExcludes true to enable the default
      */
     public void setEnableDefaultExcludes(boolean enableDefaultExcludes) {
@@ -175,7 +176,9 @@ public class Migration {
 
     /**
      * Enable exclude matching against the path name.
-     * @param matchExcludesAgainstPathName true to match excludes against the path name instead of the file name
+     *
+     * @param matchExcludesAgainstPathName true to match excludes against the
+     * path name instead of the file name
      */
     public void setMatchExcludesAgainstPathName(boolean matchExcludesAgainstPathName) {
         this.matchExcludesAgainstPathName = matchExcludesAgainstPathName;
@@ -183,6 +186,7 @@ public class Migration {
 
     /**
      * Buffer all conversion operations for compressed archives in memory.
+     *
      * @param zipInMemory true to buffer in memory
      */
     public void setZipInMemory(boolean zipInMemory) {
@@ -191,6 +195,7 @@ public class Migration {
 
     /**
      * Add specified resource exclusion.
+     *
      * @param exclude the exclude to add
      */
     public void addExclude(String exclude) {
@@ -199,6 +204,7 @@ public class Migration {
 
     /**
      * Set source file.
+     *
      * @param source the source file
      */
     public void setSource(File source) {
@@ -211,17 +217,17 @@ public class Migration {
 
     /**
      * Set destination file.
+     *
      * @param destination the destination file
      */
     public void setDestination(File destination) {
         this.destination = destination;
     }
 
-
     /**
-     * <b>NOTE</b>:
-     * this method is not to indicate that no changes were made,
+     * <b>NOTE</b>: this method is not to indicate that no changes were made,
      * but that the source can be used and satisfy the selected profile.
+     *
      * @return true if converted occurs
      */
     public boolean hasConverted() {
@@ -231,9 +237,9 @@ public class Migration {
         return converted;
     }
 
-
     /**
      * Execute migration operation.
+     *
      * @throws IOException when an exception occurs
      */
     public void execute() throws IOException {
@@ -295,15 +301,14 @@ public class Migration {
         }
         boolean inplace = src.equals(dest);
         if (!inplace) {
-            try (InputStream is = new FileInputStream(src);
-                    OutputStream os = new FileOutputStream(dest)) {
-                migrateStream(src.getAbsolutePath(), is, os);
+            try (InputStream is = new FileInputStream(src); OutputStream os = new FileOutputStream(dest)) {
+                migrateStream(src.getName(), is, os);
             }
         } else {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream((int) (src.length() * 1.05));
 
             try (InputStream is = new FileInputStream(src)) {
-                migrateStream(src.getAbsolutePath(), is, buffer);
+                migrateStream(src.getName(), is, buffer);
             }
 
             try (OutputStream os = new FileOutputStream(dest)) {
@@ -312,10 +317,8 @@ public class Migration {
         }
     }
 
-
     private void migrateArchiveStreaming(InputStream src, OutputStream dest) throws IOException {
-        try (ZipArchiveInputStream srcZipStream = new ZipArchiveInputStream(CloseShieldInputStream.wrap(src));
-                ZipArchiveOutputStream destZipStream = new ZipArchiveOutputStream(CloseShieldOutputStream.wrap(dest))) {
+        try (ZipArchiveInputStream srcZipStream = new ZipArchiveInputStream(CloseShieldInputStream.wrap(src)); ZipArchiveOutputStream destZipStream = new ZipArchiveOutputStream(CloseShieldOutputStream.wrap(dest))) {
             ZipArchiveEntry srcZipEntry;
             CRC32 crc32 = new CRC32();
             while ((srcZipEntry = srcZipStream.getNextEntry()) != null) {
@@ -327,8 +330,12 @@ public class Migration {
                         continue;
                     }
                 }
-                if (srcZipEntry.getSize() > ZIP64_THRESHOLD_LENGTH ||
-                        srcZipEntry.getCompressedSize() > ZIP64_THRESHOLD_LENGTH) {
+                if (Util.isSignatureFile(srcName)) {
+                    logger.log(Level.WARNING, sm.getString("migration.skipSignatureFile", srcName));
+                    continue;
+                }
+                if (srcZipEntry.getSize() > ZIP64_THRESHOLD_LENGTH
+                        || srcZipEntry.getCompressedSize() > ZIP64_THRESHOLD_LENGTH) {
                     logger.log(Level.WARNING, sm.getString("migration.jdk8303866", srcName));
                 } else {
                     // Avoid JDK bug - https://bugs.openjdk.org/browse/JDK-8303866
@@ -360,7 +367,6 @@ public class Migration {
         }
     }
 
-
     private void migrateArchiveInMemory(InputStream src, OutputStream dest) throws IOException {
         // Read the source into memory
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -370,13 +376,19 @@ public class Migration {
         // Create the destination in memory
         SeekableInMemoryByteChannel destByteChannel = new SeekableInMemoryByteChannel();
 
-        try (ZipFile srcZipFile = ZipFile.builder().setSeekableByteChannel(srcByteChannel).get();
-                ZipArchiveOutputStream destZipStream = new ZipArchiveOutputStream(destByteChannel)) {
+        try (ZipFile srcZipFile = new ZipFile(srcByteChannel); ZipArchiveOutputStream destZipStream = new ZipArchiveOutputStream(destByteChannel)) {
             Enumeration<ZipArchiveEntry> entries = srcZipFile.getEntries();
             while (entries.hasMoreElements()) {
                 ZipArchiveEntry srcZipEntry = entries.nextElement();
                 String srcName = srcZipEntry.getName();
-                if (isSignatureFile(srcName)) {
+                {//CUSTOM (WHY NOT WORKING?)
+                    String filename = src.toString();
+                    if (Util.isJavaFile(filename)) {
+                        logger.log(Level.INFO, "!!!   migrateArchiveInMemory: java file skipped:" + filename);
+                        continue;
+                    }
+                }
+                if (Util.isSignatureFile(srcName)) {
                     logger.log(Level.WARNING, sm.getString("migration.skipSignatureFile", srcName));
                     continue;
                 }
@@ -394,22 +406,13 @@ public class Migration {
         IOUtils.copy(bais, dest);
     }
 
-
-    private boolean isSignatureFile(String sourceName) {
-        return sourceName.startsWith("META-INF/") && (
-                sourceName.endsWith(".SF") ||
-                sourceName.endsWith(".RSA") ||
-                sourceName.endsWith(".DSA") ||
-                sourceName.endsWith(".EC")
-                );
-    }
-
-
     private void migrateStream(String name, InputStream src, OutputStream dest) throws IOException {
         if (isExcluded(name)) {
             Util.copy(src, dest);
             logger.log(Level.INFO, sm.getString("migration.skip", name));
-        } else if (isArchive(name)) {
+            return;
+        }
+        if (isArchive(name)) {
             if (zipInMemory) {
                 logger.log(Level.INFO, sm.getString("migration.archive.memory", name));
                 migrateArchiveInMemory(src, dest);
@@ -419,21 +422,20 @@ public class Migration {
                 migrateArchiveStreaming(src, dest);
                 logger.log(Level.INFO, sm.getString("migration.archive.complete", name));
             }
-        } else {
-            for (Converter converter : converters) {
-                if (converter.accepts(name)) {
-                    converted = converted | converter.convert(name, src, dest, profile);
-                    break;
-                }
+            return;
+        }
+        for (Converter converter : converters) {//else
+            if (converter.accepts(name)) {
+                converted = converted | converter.convert(name, src, dest, profile);
+                break;
             }
         }
     }
 
     private boolean isArchive(String fileName) {
-        return fileName.endsWith(".jar") || fileName.endsWith(".war") || fileName.endsWith(".ear") ||
-                fileName.endsWith(".zip");
+        return fileName.endsWith(".jar") || fileName.endsWith(".war") || fileName.endsWith(".ear")
+                || fileName.endsWith(".zip");
     }
-
 
     private boolean isExcluded(String name) {
         File f = new File(name);

@@ -57,7 +57,7 @@ public class MigrationCLI {
         System.setProperty("java.util.logging.SimpleFormatter.format", "%5$s%n");
         Migration migration = new Migration();
 
-        // Process arguments
+        // Process argumnets
         List<String> arguments = new ArrayList<>(Arrays.asList(args));
 
         // Process the custom log level if present
