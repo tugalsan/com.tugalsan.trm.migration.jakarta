@@ -32,10 +32,8 @@ public class Util {
      * Get the extension of a filename
      * <p>
      * The extension is the string after the last '{@code .}' in the filename.
-     *
      * @param filename the name of the file
-     * @return the extension or an empty string, if no dot is found in the
-     * filename
+     * @return the extension or an empty string, if no dot is found in the filename
      */
     public static String getExtension(String filename) {
         // Extract the extension
@@ -46,20 +44,8 @@ public class Util {
         return filename.substring(lastPeriod + 1).toLowerCase(Locale.ENGLISH);
     }
 
-    public static boolean isSignatureFile(String sourceName) {
-        return sourceName.startsWith("META-INF/") && (sourceName.endsWith(".SF")
-                || sourceName.endsWith(".RSA")
-                || sourceName.endsWith(".DSA")
-                || sourceName.endsWith(".EC"));
-    }
-
-    public static boolean isJavaFile(String sourceName) {
-        return getExtension(sourceName).equals("java");
-    }
-
     /**
      * Buffered copy.
-     *
      * @param is the input
      * @param os the output
      * @throws IOException if an exception occurs
@@ -67,14 +53,13 @@ public class Util {
     public static void copy(InputStream is, OutputStream os) throws IOException {
         byte[] buf = new byte[8192];
         int numRead;
-        while ((numRead = is.read(buf)) >= 0) {
+        while ( (numRead = is.read(buf) ) >= 0) {
             os.write(buf, 0, numRead);
         }
     }
 
     /**
      * Convert the input bytes as a string.
-     *
      * @param is the input byte stream
      * @param charset the charset to use
      * @return the converted string
@@ -89,5 +74,9 @@ public class Util {
 
     private Util() {
         // Hide default constructor. Utility class.
+    }
+
+    public static boolean isJavaFile(String sourceName) {
+        return getExtension(sourceName).equals("java");
     }
 }
