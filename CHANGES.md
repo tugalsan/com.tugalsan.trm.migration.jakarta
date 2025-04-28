@@ -1,7 +1,15 @@
 # Tomcat Migration Tool for Jakarta EE - Changelog
 
 ## 1.0.9
-- Update the JaCoCo Maven plugin to 0.8.11. (markt)
+- Update the JaCoCo Maven plugin to 0.8.12. (dependabot/markt)
+- Update Commons BCEL to 6.10.0. (dependabot/markt)
+- Update Commons Compress to 1.27.1. (dependabot/markt)
+- Update Commons IO to 2.18.0. (dependabot/markt)
+- Update Ant to 1.10.15. (dependabot/markt)
+- Fix issue that `matchExcludesAgainstPathName` didn't work for files. Part of PR[#60](https://github.com/apache/tomcat-jakartaee-migration/pull/42) provided by Semiao Marco. (markt)
+- Update ASF parent POM to 33. (markt)
+- Added a new profile, `SERVLET` that only migrates the `javax.servlet` package and sub-packages. PR[#57](https://github.com/apache/tomcat-jakartaee-migration/pull/57) provided by Ralf Wiebicke. (markt)
+
 
 ## 1.0.8
 - Include `.ear` files in list of recognised archives. PR[#50](https://github.com/apache/tomcat-jakartaee-migration/pull/50) provided by Sammy Chu. (markt)
@@ -15,7 +23,7 @@
 ## 1.0.7
 
 - When converting directories, rename files according to the chosen profile. (fschumacher)
-- Add configuration option, `matchExcludesAgainstPathName` that can be used to configure exclusions base don path name rather than just file name.  PR[#38](https://github.com/apache/tomcat-jakartaee-migration/pull/38) provided by Réda Housni Alaoui. (markt)
+- Add configuration option, `matchExcludesAgainstPathName` that can be used to configure exclusions based on path name rather than just file name.  PR[#38](https://github.com/apache/tomcat-jakartaee-migration/pull/38) provided by Réda Housni Alaoui. (markt)
 - Update OSGI servlet specification versions if present in manifest file. PR[#42](https://github.com/apache/tomcat-jakartaee-migration/pull/42) provided by Ivan Furnadjiev. (markt)
 - Update Commons BCEL to 6.7.0. (markt)
 - Update Commons Compress to 1.23.0. (markt)
